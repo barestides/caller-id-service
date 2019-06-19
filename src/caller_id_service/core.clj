@@ -10,22 +10,23 @@
   [;;Just stole straight from the cli-tools page
    ;;https://github.com/clojure/tools.cli
    ["-p" "--port PORT" "Port number"
-    :default 80
+    :default 8080
     :parse-fn #(Integer/parseInt %)
     :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
 
-   ["-s" "--seed SEED-FILE" "Seed file"
-    :default "resources/small-seed.txt"
+   ["-s" "--seed SEED-FILENAME" "Seed file"
+    :default "resources/interview-callerid-data.csv"
     :parse-fn io/file
-    :validate #(.exists (io/file %))]])
+    :validate [#(.exists (io/file %))]]])
 
 (defn -main
   [& args]
   (prn args)
   (let [parsed-options (parse-opts args cli-options)
-        {:keys [port seed-file]} (:options parsed-options)]
+        {:keys [port seed]} (:options parsed-options)]
+    (caller-id-service.util/spy parsed-options)
     (info "Loading seed records")
-    (fake-db/load-seed seed-file)
+    (fake-db/load-seed seed)
     (info "Seed records loaded")
     (info "Starting webserver")
     (server/start-server port)))
