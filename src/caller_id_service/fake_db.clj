@@ -3,7 +3,7 @@
             [caller-id-service.util :as util]))
 
 ;;defonce so it doesn't get reset every time we compile this ns when developing
-(defonce numbers-db (atom #{}))
+(defonce numbers-db (atom []))
 
 (defn mapify-seed-record
   "Convert the caller id record in the CSV seed to a clojure map."
@@ -18,10 +18,18 @@
      :name name}))
 
 (defn load-seed
+  "Copy records stored in a CSV file to an in-memory DB."
   [seed-file]
   (let [string-records (string/split-lines (slurp seed-file))
-        records (set (map mapify-seed-record string-records))]
+        records (mapv mapify-seed-record string-records)]
     (reset! numbers-db records)))
+
+(defn context-number-pair-exists?
+  [search-context search-number]
+  (not-empty (filter (fn [{:keys [context number]}]
+                       (and (= context search-context)
+                            (= number search-number)))
+                     @numbers-db)))
 
 (defn records-for-number
   [number]
@@ -32,3 +40,7 @@
       ;;something about why not to lump them together
       (filter #(= (:number %) (apply str (take-last 10 number))) @numbers-db)
       with-country-code)))
+
+(defn add-record!
+  [record]
+  (swap! numbers-db conj record))

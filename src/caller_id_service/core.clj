@@ -27,4 +27,5 @@
     (info "Loading seed records")
     (fake-db/load-seed seed-file)
     (info "Seed records loaded")
-    (info "Starting webserver")))
+    (info "Starting webserver")
+    (server/start-server port)))
