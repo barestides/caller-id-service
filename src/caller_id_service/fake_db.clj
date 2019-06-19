@@ -37,7 +37,6 @@
     (if (empty? with-country-code)
       ;;Not all numbers in the DB have country codes, So we should search for the number without
       ;;the country code if there are no records for the number with the code.
-      ;;something about why not to lump them together
       (filter #(= (:number %) (apply str (take-last 10 number))) @numbers-db)
       with-country-code)))
 

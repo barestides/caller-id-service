@@ -7,19 +7,19 @@
 
 (deftest add-and-query-test
   (reset! fake-db/numbers-db [])
-  (start-server 8080)
+  (start-server 8082)
   (let [dummy-record {:name "Braden Arestides"
                       :number "+19372279478"
                       :context "phone"}
         make-add-req (fn [record]
-                       @(client/post "http://localhost:8080/number" {:query-params record}))
+                       @(client/post "http://localhost:8082/number" {:query-params record}))
         add-response (make-add-req dummy-record)]
     (is (= 200 (:status add-response)))
     (let [duplicate-add (make-add-req dummy-record)]
-      (is (= 400 (:status duplicate-add))))
+      (is (= 400 (:status duplicate-add)) "Adding a duplicate record should fail."))
     (let [missing-data-add (make-add-req (assoc dummy-record :name ""))]
-      (is (= 400 (:status missing-data-add)))))
-  (let [response @(client/get "http://localhost:8080/query?number=%2B19372279478" {:as :text})
+      (is (= 400 (:status missing-data-add)) "Adding a record with missing data should fail")))
+  (let [response @(client/get "http://localhost:8082/query?number=%2B19372279478" {:as :text})
         {:keys [body status]} response]
     (is (= 200 status))
     (is (= body

@@ -21,10 +21,8 @@
 
 (defn -main
   [& args]
-  (prn args)
   (let [parsed-options (parse-opts args cli-options)
         {:keys [port seed]} (:options parsed-options)]
-    (caller-id-service.util/spy parsed-options)
     (info "Loading seed records")
     (fake-db/load-seed seed)
     (info "Seed records loaded")
