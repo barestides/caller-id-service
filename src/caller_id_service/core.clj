@@ -1,29 +1,10 @@
 (ns caller-id-service.core
-  (:require [clojure.string :as string]
-            [clojure.java.io :as io]
+  (:require [clojure.java.io :as io]
+            [clojure.tools.cli :refer [parse-opts]]
+            [taoensso.timbre :refer [info]]
             [caller-id-service.server :as server]
-            [caller-id-service.util :as util]
-            [clojure.tools.cli :refer [parse-opts]])
+            [caller-id-service.fake-db :as fake-db])
   (:gen-class))
-
-(defonce numbers-db (atom #{}))
-
-(defn mapify-seed-record
-  [record]
-  (let [[number context name] (string/split record #",")]
-    ;;if the seed number starts with a +, assume it already is in E.164 format
-    ;;otherwise, strip punctuation from the number
-    {:number (if (re-find #"^\+" number)
-               number
-               (util/only-digits number))
-     :context context
-     :name name}))
-
-(defn load-seed
-  [seed-file]
-  (let [string-records (string/split-lines (slurp seed-file))
-        records (set (map mapify-seed-record string-records))]
-    (reset! numbers-db records)))
 
 (def cli-options
   [;;Just stole straight from the cli-tools page
@@ -35,10 +16,15 @@
 
    ["-s" "--seed SEED-FILE" "Seed file"
     :default "resources/small-seed.txt"
+    :parse-fn io/file
     :validate #(.exists (io/file %))]])
 
 (defn -main
-  "I don't do a whole lot ... yet."
   [& args]
-  (let [options (parse-opts args cli-options)
-        port (get-in options [:options :port])]))
+  (prn args)
+  (let [parsed-options (parse-opts args cli-options)
+        {:keys [port seed-file]} (:options parsed-options)]
+    (info "Loading seed records")
+    (fake-db/load-seed seed-file)
+    (info "Seed records loaded")
+    (info "Starting webserver")))
